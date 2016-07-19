@@ -27,9 +27,9 @@ namespace NetworkSample
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        DownloadOperation operation;
         CancellationTokenSource cts = new CancellationTokenSource();
         StorageFolder folder;
+        List<DownloadOperation> operations;
 
         public MainPage()
         {
@@ -38,6 +38,28 @@ namespace NetworkSample
             string defaultPath = localFolderPath.Substring(0, localFolderPath.IndexOf("AppData\\Local")) + "Downloads\\"+Windows.ApplicationModel.Package.Current.Id.FamilyName+"!App";
             folderTbx.Text = defaultPath;
             NavigationCacheMode = NavigationCacheMode.Enabled;
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            await InitCurrentDownloads();
+        }
+
+        private async Task InitCurrentDownloads()
+        {
+            operations = new List<DownloadOperation>();
+               var downloads = await BackgroundDownloader.GetCurrentDownloadsAsync();
+            if(downloads.Count > 0)
+            {
+                List<Task> tasks = new List<Task>();
+                foreach(var download in downloads)
+                {
+                    tasks.Add(HandleDownloadAsync(download,false));
+                }
+                await Task.WhenAll(tasks);
+            }
         }
 
         private async void begin_Click(object sender, RoutedEventArgs e)
@@ -59,9 +81,14 @@ namespace NetworkSample
             catch { return; }
 
             BackgroundDownloader downloader = new BackgroundDownloader();
-            operation = downloader.CreateDownload(source, file);
+            var operation = downloader.CreateDownload(source, file);
             operation.Priority = BackgroundTransferPriority.Default;
+            await HandleDownloadAsync(operation,true);
+        }
 
+        private async Task HandleDownloadAsync(DownloadOperation operation,bool isStart)
+        {
+            operations.Add(operation);
             Progress<DownloadOperation> progress = new Progress<DownloadOperation>((o) =>
             {
                 var currentProgress = o.Progress;
@@ -69,7 +96,10 @@ namespace NetworkSample
             });
             try
             {
-                await operation.StartAsync().AsTask(cts.Token, progress);
+                if (isStart)
+                    await operation.StartAsync().AsTask(cts.Token, progress);
+                else
+                    await operation.AttachAsync().AsTask(cts.Token, progress);
                 status.Text = "StatusCode: " + operation.GetResponseInformation().StatusCode.ToString();
             }
             catch (TaskCanceledException te)
@@ -80,11 +110,15 @@ namespace NetworkSample
             {
                 status.Text = "StatusCode: " + operation.GetResponseInformation().StatusCode.ToString();
             }
+            finally
+            {
+                operations.Remove(operation);
+            }
         }
 
         private void stop_Click(object sender, RoutedEventArgs e)
         {
-            if (null != operation)
+          foreach(var operation in operations)
                 operation.Pause();
         }
 
@@ -105,12 +139,12 @@ namespace NetworkSample
             cts.Cancel();
             cts.Dispose();
             cts = new CancellationTokenSource();
-            operation = null;
+            operations = new List<DownloadOperation>();
         }
 
         private void resume_Click(object sender, RoutedEventArgs e)
         {
-            if (null != operation)
+            foreach (var operation in operations)
                 operation.Resume();
         }
     }
