@@ -1,0 +1,26 @@
+﻿<Page
+    x:Class="NetworkSample.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NetworkSample"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <RelativePanel>
+            <TextBlock x:Name="title" Margin="12" Text="Sample Download" Style="{ThemeResource TitleTextBlockStyle}" />
+            <TextBox x:Name="urlTbx" RelativePanel.Below="title" Margin="12,16,12,0" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True"/>
+            <TextBox x:Name="folderTbx" IsReadOnly="True" RelativePanel.Below="urlTbx"  Margin="12,16,12,0" RelativePanel.RightOf="browser" RelativePanel.AlignRightWithPanel="True"/>
+            <Button x:Name="browser" Click="browser_Click" RelativePanel.Below="urlTbx" Margin="12,16,0,0" Content="save folder browser"/>
+            <Button x:Name="begin" Click="begin_Click" RelativePanel.Below="browser" Margin="12,16,12,0" RelativePanel.AlignLeftWithPanel="True" Content="begin"/>
+            <Button x:Name="cancel" Click="cancel_Click" RelativePanel.Below="browser" Margin="0,16,0,0" RelativePanel.RightOf="begin" Content="cancel"/>
+            <Button x:Name="stop" Click="stop_Click" RelativePanel.Below="begin" Margin="12,16,12,0" RelativePanel.AlignLeftWithPanel="True" Content="stop"/>
+            <Button x:Name="resume" Click="resume_Click" RelativePanel.Below="cancel" Margin="0,16,0,0" RelativePanel.RightOf="stop" Content="resume"/>
+
+            <TextBlock x:Name="result" RelativePanel.Below="stop" Margin="12,16,0,0"/>
+            <TextBlock x:Name="status" RelativePanel.Below="result" Margin="12,16,0,0"/>
+        </RelativePanel>
+        
+    </Grid>
+</Page>
